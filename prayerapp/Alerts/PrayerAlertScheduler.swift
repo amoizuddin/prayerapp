@@ -2,13 +2,13 @@ import Foundation
 import UserNotifications
 
 /// Lines up local alerts for the coming prayers. iOS keeps at most 64 pending alerts,
-/// so we schedule about a week (5 a day) plus a "running low" reminder, and redo it
-/// whenever the app opens, the times refresh, or a setting changes.
+/// so we schedule 12 days (5 a day = 60) plus a "running low" reminder, and redo it
+/// whenever the app opens, wakes in the background, the times refresh, or a setting changes.
 final class PrayerAlertScheduler: NSObject, UNUserNotificationCenterDelegate {
     static let shared = PrayerAlertScheduler()
 
     private let center = UNUserNotificationCenter.current()
-    private let maxPrayerAlerts = 35
+    private let maxPrayerAlerts = 60
 
     /// Call once at launch so alerts also show while the app is open.
     func activate() {
@@ -20,7 +20,21 @@ final class PrayerAlertScheduler: NSObject, UNUserNotificationCenterDelegate {
         _ = try? await center.requestAuthorization(options: [.alert, .sound])
     }
 
+    /// The refill currently running, so refills take turns instead of overlapping
+    /// (overlapping ones could each clear the list and then both add, leaving duplicates).
+    private var lastRefill: Task<Void, Never>?
+
     func reschedule(days: [DayTimes], now: Date) async {
+        let previous = lastRefill
+        let refill = Task {
+            await previous?.value
+            await performReschedule(days: days, now: now)
+        }
+        lastRefill = refill
+        await refill.value
+    }
+
+    private func performReschedule(days: [DayTimes], now: Date) async {
         let settings = await center.notificationSettings()
         guard settings.authorizationStatus == .authorized else { return }
 

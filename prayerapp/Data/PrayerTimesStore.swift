@@ -4,6 +4,9 @@ import Observation
 /// Holds the prayer times the app shows: loads the saved copy first, then refreshes from the source.
 @Observable
 final class PrayerTimesStore {
+    /// The one store the app uses, shared by the screen and background refresh.
+    static let shared = PrayerTimesStore()
+
     private(set) var days: [DayTimes] = []
     private(set) var isLoading = false
     private(set) var lastError: Error?
@@ -12,7 +15,11 @@ final class PrayerTimesStore {
 
     private let source: any PrayerTimesSource
     private let cache: PrayerTimesCache
-    private let daysToFetch = 7
+    /// How many days each fetch covers (about a month, usually two requests to Aladhan).
+    private let daysToFetch = 30
+    /// Go online only when fewer saved days than this remain (today included):
+    /// enough to always line up 12 days of alerts.
+    private let minimumDaysAhead = 13
 
     init(source: any PrayerTimesSource = PrayerTimesStore.defaultSource, cache: PrayerTimesCache = PrayerTimesCache()) {
         self.source = source
@@ -52,12 +59,17 @@ final class PrayerTimesStore {
         days.flatMap(\.times).filter { $0.date > now }.min { $0.date < $1.date }
     }
 
-    /// Fetches fresh times unless we already hold enough days ahead.
+    /// Number of saved days from today onward (0 if today itself is missing).
+    func daysAhead(at now: Date) -> Int {
+        guard today(at: now) != nil else { return 0 }
+        let todayKey = MasjidLocation.dayKey(for: now)
+        return days.filter { $0.day >= todayKey }.count
+    }
+
+    /// Goes online only when the saved times can't fill 12 days of alerts,
+    /// so the app normally fetches about once every two and a half weeks.
     func refreshIfNeeded(now: Date) async {
-        let tomorrow = MasjidLocation.calendar.date(byAdding: .day, value: 1, to: now)!
-        let haveToday = today(at: now) != nil
-        let haveTomorrow = days.contains { $0.day == MasjidLocation.dayKey(for: tomorrow) }
-        if haveToday && haveTomorrow && lastFetchDay == MasjidLocation.dayKey(for: now) { return }
+        guard daysAhead(at: now) < minimumDaysAhead else { return }
         await refresh(now: now)
     }
 
@@ -72,15 +84,12 @@ final class PrayerTimesStore {
             for day in fresh { byDay[day.day] = day }
             days = byDay.values.filter { $0.day >= yesterday }.sorted { $0.day < $1.day }
             cache.save(days)
-            lastFetchDay = MasjidLocation.dayKey(for: now)
             lastUpdated = Date()
             lastError = nil
         } catch {
             lastError = error
         }
     }
-
-    private var lastFetchDay: String?
 }
 
 #if DEBUG

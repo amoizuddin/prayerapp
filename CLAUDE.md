@@ -18,8 +18,9 @@ A personal iPhone app showing daily prayer times for Islamic Foundation (IF) in 
 
 ## Tech rules
 - Apple frameworks only. Ask before adding any third-party package.
-- Prayer data: Aladhan API (`api.aladhan.com/v1/timings`), ISNA method (`method=2`), location Lombard, IL.
+- Prayer data: Aladhan API month endpoint (`api.aladhan.com/v1/calendar/{year}/{month}`), ISNA method (`method=2`), location Lombard, IL. Fetch about 30 days at a time; go online only when fewer than 13 days remain (or on pull-to-refresh).
 - Cache the times locally so the app works offline.
+- Keep battery use minimal: let iOS do the work (pre-scheduled alerts), keep background wake-ups rare, and call out any feature's battery cost in its plan.
 - Keep data fetching separate from the UI, so the source can be swapped for IF's real iqamah times later.
 
 ## Roadmap

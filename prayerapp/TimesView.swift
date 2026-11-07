@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Today's prayer times, the next one highlighted, and a live countdown.
 struct TimesView: View {
-    @State private var store = PrayerTimesStore()
+    /// Shared with the background refresh, which updates it while the app is closed.
+    private let store = PrayerTimesStore.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {

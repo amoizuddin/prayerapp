@@ -1,28 +1,37 @@
 import Foundation
 
 /// Fetches prayer times from the Aladhan API (ISNA method) for Lombard, IL.
+/// Uses the month endpoint (`/v1/calendar/{year}/{month}`): one request per calendar month.
 nonisolated struct AladhanSource: PrayerTimesSource {
     var session: URLSession = .shared
 
     func fetchDays(from start: Date, count: Int) async throws -> [DayTimes] {
         let calendar = MasjidLocation.calendar
         let first = calendar.startOfDay(for: start)
-        let dates = (0..<count).compactMap { calendar.date(byAdding: .day, value: $0, to: first) }
+        let last = calendar.date(byAdding: .day, value: count - 1, to: first)!
+        let firstKey = MasjidLocation.dayKey(for: first)
+        let lastKey = MasjidLocation.dayKey(for: last)
 
-        return try await withThrowingTaskGroup(of: DayTimes.self) { group in
-            for date in dates {
-                group.addTask { try await fetchDay(date) }
-            }
-            var days: [DayTimes] = []
-            for try await day in group { days.append(day) }
-            return days.sorted { $0.day < $1.day }
+        // The calendar months the requested days fall in (usually two).
+        var months: [(year: Int, month: Int)] = []
+        var cursor = calendar.date(from: calendar.dateComponents([.year, .month], from: first))!
+        while cursor <= last {
+            let c = calendar.dateComponents([.year, .month], from: cursor)
+            months.append((c.year!, c.month!))
+            cursor = calendar.date(byAdding: .month, value: 1, to: cursor)!
         }
+
+        var days: [DayTimes] = []
+        for (year, month) in months {
+            days += try await fetchMonth(year: year, month: month)
+        }
+        return days
+            .filter { $0.day >= firstKey && $0.day <= lastKey }
+            .sorted { $0.day < $1.day }
     }
 
-    private func fetchDay(_ date: Date) async throws -> DayTimes {
-        let c = MasjidLocation.calendar.dateComponents([.year, .month, .day], from: date)
-        let path = String(format: "%02d-%02d-%04d", c.day!, c.month!, c.year!)
-        var components = URLComponents(string: "https://api.aladhan.com/v1/timings/\(path)")!
+    private func fetchMonth(year: Int, month: Int) async throws -> [DayTimes] {
+        var components = URLComponents(string: "https://api.aladhan.com/v1/calendar/\(year)/\(month)")!
         components.queryItems = [
             URLQueryItem(name: "latitude", value: String(MasjidLocation.latitude)),
             URLQueryItem(name: "longitude", value: String(MasjidLocation.longitude)),
@@ -37,21 +46,31 @@ nonisolated struct AladhanSource: PrayerTimesSource {
             throw URLError(.badServerResponse)
         }
         let decoded = try JSONDecoder().decode(Response.self, from: data)
-        let timeZone = TimeZone(identifier: decoded.data.meta.timezone) ?? MasjidLocation.timeZone
+        return try decoded.data.map(Self.dayTimes)
+    }
 
-        let raw = decoded.data.timings
+    private static func dayTimes(from entry: Response.DayData) throws -> DayTimes {
+        let timeZone = TimeZone(identifier: entry.meta.timezone) ?? MasjidLocation.timeZone
+
+        // Gregorian date comes as "DD-MM-YYYY".
+        let parts = entry.date.gregorian.date.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { throw URLError(.cannotParseResponse) }
+        let day = DateComponents(year: parts[2], month: parts[1], day: parts[0])
+
+        let raw = entry.timings
         let pairs: [(Prayer, String)] = [
             (.fajr, raw.Fajr), (.sunrise, raw.Sunrise), (.dhuhr, raw.Dhuhr),
             (.asr, raw.Asr), (.maghrib, raw.Maghrib), (.isha, raw.Isha),
         ]
         let times = try pairs.map { prayer, text in
-            PrayerTime(prayer: prayer, date: try Self.moment(text, on: c, in: timeZone))
+            PrayerTime(prayer: prayer, date: try moment(text, on: day, in: timeZone))
         }
-        let h = decoded.data.date.hijri
-        let hijri = Int(h.day).flatMap { day in
-            Int(h.year).map { HijriDate(day: day, month: h.month.number, year: $0) }
+        let h = entry.date.hijri
+        let hijri = Int(h.day).flatMap { d in
+            Int(h.year).map { HijriDate(day: d, month: h.month.number, year: $0) }
         }
-        return DayTimes(day: String(format: "%04d-%02d-%02d", c.year!, c.month!, c.day!), times: times, hijri: hijri)
+        let key = String(format: "%04d-%02d-%02d", parts[2], parts[1], parts[0])
+        return DayTimes(day: key, times: times, hijri: hijri)
     }
 
     /// Turns "05:13" or "05:13 (CST)" on a given day into an exact moment.
@@ -70,14 +89,18 @@ nonisolated struct AladhanSource: PrayerTimesSource {
     }
 
     private struct Response: Decodable {
-        let data: DayData
+        let data: [DayData]
         struct DayData: Decodable {
             let timings: Timings
             let date: DateInfo
             let meta: Meta
         }
         struct DateInfo: Decodable {
+            let gregorian: Gregorian
             let hijri: Hijri
+        }
+        struct Gregorian: Decodable {
+            let date: String
         }
         struct Hijri: Decodable {
             let day: String

@@ -1,10 +1,7 @@
 # Roadmap
 
 ## Now
-- **Prayer alerts:** a local alert at each of the five prayers (not Sunrise), a week ahead (iOS caps queued alerts at 64), refilled whenever the app opens or refreshes.
-  - Each prayer can be set to Time Sensitive (breaks through Focus modes) in an in-app settings screen.
-  - A "running low" reminder about a day before alerts run out: "Don't miss a prayer" / "Open Prayer Times to keep getting alerts."
-- **Background refresh:** the app asks iOS to wake it about twice a day to fetch fresh times and refill alerts. Best effort: iOS skips it in Low Power Mode, when Background App Refresh is off, after the app is swiped away, or for rarely used apps.
+- Nothing in progress.
 
 ## Next
 - **Azan and widget:** the azan as the notification sound (under 30 seconds, bundled as `.caf`), and a Lock Screen widget for the next prayer.
@@ -16,8 +13,13 @@
 - **Reminder before each prayer:** e.g. 10 minutes before.
 - **Per-prayer alert on/off switches** (in the settings screen).
 - **Hijri date adjustment:** shift the Hijri date by ±1 day to match IF's moon-sighting date.
+- **App name:** rename the app from "prayerapp" to "Prayer Times" so the home screen and permission prompt match the reminder text.
 
 ## Done
 - **Times screen:** today's five prayers plus Sunrise, the next one highlighted, and a live countdown. Times cached for offline use.
 - **Hijri date:** from Aladhan, shown under the regular date, switching to the next day at Maghrib.
-- **Pull-to-refresh:** with a status line ("Updated just now" / "Couldn't connect · Updated 2 hours ago").
+- **Pull-to-refresh:** spins while held, fetches when let go, with a status line ("Updated just now" / "Couldn't connect · Updated 2 hours ago").
+- **Prayer alerts:** a local alert at each of the five prayers (not Sunrise), 12 days ahead (iOS caps queued alerts at 64), refilled whenever the app opens, wakes, or refreshes.
+  - Each prayer can be set to Time Sensitive (breaks through Focus modes) in Settings (gear button).
+  - A "running low" reminder about a day before alerts run out: "Don't miss a prayer" / "Open Prayer Times to keep getting alerts."
+- **Background refresh and month-at-a-time data:** about 30 days of times per fetch (Aladhan's month endpoint); the app goes online only when fewer than 13 days remain (about every 2½ weeks). iOS is asked to wake the app every 3 days to refill alerts from saved times. Best effort: iOS may delay or skip it (Low Power Mode, Background App Refresh off, app swiped away), which the 12 days of alerts cover.
