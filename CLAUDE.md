@@ -23,7 +23,4 @@ A personal iPhone app showing daily prayer times for Islamic Foundation (IF) in 
 - Keep data fetching separate from the UI, so the source can be swapped for IF's real iqamah times later.
 
 ## Roadmap
-1. **Times screen:** today's five prayers plus sunrise, the next prayer highlighted, and a live countdown.
-2. **Notifications:** a local alert at each prayer. iOS caps queued alerts at 64, so schedule a few days ahead and refill on launch.
-3. **Azan and widget:** the azan as the notification sound (under 30 seconds, bundled as `.caf`), and a Lock Screen widget for the next prayer.
-4. **IF iqamah times:** swap in IF's actual times once a source is available.
+The roadmap lives in `ROADMAP.md` (Now / Next / Ideas / Done). Read it at the start of a session. When I mention a new feature idea, add it under Ideas; move items to Done when they ship.
