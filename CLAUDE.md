@@ -24,4 +24,4 @@ A personal iPhone app showing daily prayer times for Islamic Foundation (IF) in 
 - Keep data fetching separate from the UI, so the source can be swapped for IF's real iqamah times later.
 
 ## Roadmap
-The roadmap lives in `ROADMAP.md` (Now / Next / Ideas / Done). Read it at the start of a session. When I mention a new feature idea, add it under Ideas; move items to Done when they ship.
+The roadmap lives in `ROADMAP.md` (Now / Next / Ideas / Done). Read it at the start of a session. When I mention a new feature idea, add it under Ideas; move items to Done when they ship. `ROADMAP.md` is local only (git-ignored): never commit it.

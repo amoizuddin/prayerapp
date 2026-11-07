@@ -7,3 +7,6 @@ xcuserdata/
 
 # macOS
 .DS_Store
+
+# Personal roadmap (kept local, not in git)
+ROADMAP.md
