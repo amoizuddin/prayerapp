@@ -1,0 +1,1 @@
+@rpath/prayerapp.debug.dylib
