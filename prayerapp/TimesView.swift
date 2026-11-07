@@ -9,9 +9,25 @@ struct TimesView: View {
         NavigationStack {
             TimelineView(.periodic(from: .now, by: 1)) { _ in
                 let now = AppClock.now
+                let gregorian = now.formatted(.dateTime.weekday(.wide).month(.wide).day())
                 content(now: now)
                     .navigationTitle("Prayer Times")
-                    .navigationSubtitle(now.formatted(.dateTime.weekday(.wide).month(.wide).day()))
+                    .navigationSubtitle(gregorian)
+                    .toolbar {
+                        // Under the large title: the regular date, then the Hijri date
+                        // (which switches to the next day at Maghrib), same size.
+                        ToolbarItem(placement: .largeSubtitle) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(gregorian)
+                                if let hijri = store.hijriDate(at: now) {
+                                    Text(hijri.formatted)
+                                }
+                            }
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
             }
         }
         .task { await store.refreshIfNeeded(now: AppClock.now) }
@@ -30,11 +46,6 @@ struct TimesView: View {
                 if let next {
                     Section {
                         CountdownRow(next: next, now: now)
-                    } header: {
-                        // The Hijri date; switches to the next day at Maghrib.
-                        if let hijri = store.hijriDate(at: now) {
-                            Text(hijri.formatted)
-                        }
                     }
                 }
                 Section("Today") {
