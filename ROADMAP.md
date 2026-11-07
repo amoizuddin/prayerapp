@@ -13,6 +13,8 @@
 - **Reminder before each prayer:** e.g. 10 minutes before.
 - **Per-prayer alert on/off switches** (in the settings screen).
 - **Hijri date adjustment:** shift the Hijri date by ±1 day to match IF's moon-sighting date.
+- **Home Screen widget:** a bigger widget that could show all of today's times, alongside the Lock Screen widget.
+- **Salah tracker:** a simple daily checklist of the five prayers to tick off as each is prayed. Details to be fleshed out; could tie in with "Mark as prayed" above (the alert's "Prayed" button checking it off).
 - **App name:** rename the app from "prayerapp" to "Prayer Times" so the home screen and permission prompt match the reminder text.
 
 ## Done
