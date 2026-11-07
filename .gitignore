@@ -1,0 +1,9 @@
+# Build output (recreated on every build)
+build/
+DerivedData/
+
+# Per-user Xcode settings
+xcuserdata/
+
+# macOS
+.DS_Store

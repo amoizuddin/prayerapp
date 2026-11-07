@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'prayerapp' in project 'prayerapp' (no dependencies)
