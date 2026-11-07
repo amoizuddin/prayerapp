@@ -12,7 +12,7 @@ struct TimesView: View {
                 let now = AppClock.now
                 let gregorian = now.formatted(.dateTime.weekday(.wide).month(.wide).day())
                 content(now: now)
-                    .navigationTitle("Prayer Times")
+                    .navigationTitle("Salah Times")
                     .navigationSubtitle(gregorian)
                     .toolbar {
                         // Under the large title: the regular date, then the Hijri date
