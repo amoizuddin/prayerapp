@@ -38,6 +38,19 @@ struct TimesView: View {
         }
     }
 
+    /// Mail-style status: when the times were last updated, or that updating failed.
+    /// For example "Updated just now", or "Couldn't connect · Updated 2 hours ago" after a failed refresh.
+    private var statusLine: String {
+        var updated = ""
+        if let date = store.lastUpdated {
+            updated = Date().timeIntervalSince(date) < 60
+                ? "Updated just now"
+                : "Updated \(date.formatted(.relative(presentation: .named)))"
+        }
+        guard store.lastError != nil else { return updated }
+        return updated.isEmpty ? "Couldn't connect" : "Couldn't connect · \(updated)"
+    }
+
     @ViewBuilder
     private func content(now: Date) -> some View {
         if let today = store.today(at: now) {
@@ -48,12 +61,17 @@ struct TimesView: View {
                         CountdownRow(next: next, now: now)
                     }
                 }
-                Section("Today") {
+                Section {
                     ForEach(today.times, id: \.self) { time in
                         PrayerRow(time: time, isNext: time == next)
                     }
+                } header: {
+                    Text("Today")
+                } footer: {
+                    Text(statusLine)
                 }
             }
+            .refreshable { await store.refresh(now: AppClock.now) }
         } else if store.isLoading {
             ProgressView("Loading prayer times…")
         } else {

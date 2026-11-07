@@ -7,15 +7,27 @@ final class PrayerTimesStore {
     private(set) var days: [DayTimes] = []
     private(set) var isLoading = false
     private(set) var lastError: Error?
+    /// Real (wall-clock) time of the last successful update.
+    private(set) var lastUpdated: Date?
 
     private let source: any PrayerTimesSource
     private let cache: PrayerTimesCache
     private let daysToFetch = 7
 
-    init(source: any PrayerTimesSource = AladhanSource(), cache: PrayerTimesCache = PrayerTimesCache()) {
+    init(source: any PrayerTimesSource = PrayerTimesStore.defaultSource, cache: PrayerTimesCache = PrayerTimesCache()) {
         self.source = source
         self.cache = cache
         self.days = cache.load()
+        self.lastUpdated = days.isEmpty ? nil : cache.lastSaved()
+    }
+
+    /// Aladhan normally. In Debug builds, launching with `-simulateOffline YES`
+    /// makes every fetch fail, to test the offline behavior.
+    private static var defaultSource: any PrayerTimesSource {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "simulateOffline") { return OfflineSource() }
+        #endif
+        return AladhanSource()
     }
 
     /// Today's six times, if we have them.
@@ -61,6 +73,7 @@ final class PrayerTimesStore {
             days = byDay.values.filter { $0.day >= yesterday }.sorted { $0.day < $1.day }
             cache.save(days)
             lastFetchDay = MasjidLocation.dayKey(for: now)
+            lastUpdated = Date()
             lastError = nil
         } catch {
             lastError = error
@@ -69,3 +82,13 @@ final class PrayerTimesStore {
 
     private var lastFetchDay: String?
 }
+
+#if DEBUG
+/// A source that always fails, as if there were no internet.
+private nonisolated struct OfflineSource: PrayerTimesSource {
+    func fetchDays(from start: Date, count: Int) async throws -> [DayTimes] {
+        try await Task.sleep(for: .seconds(4))
+        throw URLError(.notConnectedToInternet)
+    }
+}
+#endif

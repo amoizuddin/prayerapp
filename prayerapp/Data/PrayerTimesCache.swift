@@ -15,6 +15,11 @@ nonisolated struct PrayerTimesCache {
         return (try? JSONDecoder().decode([DayTimes].self, from: data)) ?? []
     }
 
+    /// When the saved copy was last written, i.e. the last successful update.
+    func lastSaved() -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: fileURL.path(percentEncoded: false)))?[.modificationDate] as? Date
+    }
+
     func save(_ days: [DayTimes]) {
         guard let data = try? JSONEncoder().encode(days) else { return }
         try? data.write(to: fileURL, options: .atomic)
