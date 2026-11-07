@@ -29,7 +29,10 @@ nonisolated struct AladhanSource: PrayerTimesSource {
             URLQueryItem(name: "method", value: "2"),
         ]
 
-        let (data, response) = try await session.data(from: components.url!)
+        // Always ask Aladhan: it allows reusing answers for an hour, which would make a
+        // refresh return old data instantly. The app keeps its own saved copy instead.
+        let request = URLRequest(url: components.url!, cachePolicy: .reloadIgnoringLocalCacheData)
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }

@@ -93,7 +93,13 @@ struct TimesView: View {
                     Text(statusLine)
                 }
             }
-            .refreshable { await store.refresh(now: AppClock.now) }
+            .refreshable {
+                // Keep the spinner up for at least a second, so a fast refresh still reads as one.
+                let started = Date()
+                await store.refresh(now: AppClock.now)
+                let remaining = 1 - Date().timeIntervalSince(started)
+                if remaining > 0 { try? await Task.sleep(for: .seconds(remaining)) }
+            }
         } else if store.isLoading {
             ProgressView("Loading prayer times…")
         } else {
