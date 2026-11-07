@@ -24,6 +24,17 @@ final class PrayerTimesStore {
         return days.first { $0.day == key }
     }
 
+    /// The Hijri date right now. The Islamic day begins at Maghrib, so after
+    /// today's Maghrib this is tomorrow's Hijri date.
+    func hijriDate(at now: Date) -> HijriDate? {
+        guard let today = today(at: now) else { return nil }
+        let maghrib = today.times.first { $0.prayer == .maghrib }?.date
+        guard let maghrib, now >= maghrib else { return today.hijri }
+        let tomorrow = MasjidLocation.calendar.date(byAdding: .day, value: 1, to: now)!
+        let key = MasjidLocation.dayKey(for: tomorrow)
+        return days.first { $0.day == key }?.hijri
+    }
+
     /// The next time (Sunrise included) after `now`, looking into the coming days if needed.
     func next(after now: Date) -> PrayerTime? {
         days.flatMap(\.times).filter { $0.date > now }.min { $0.date < $1.date }

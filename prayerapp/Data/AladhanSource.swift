@@ -44,7 +44,11 @@ nonisolated struct AladhanSource: PrayerTimesSource {
         let times = try pairs.map { prayer, text in
             PrayerTime(prayer: prayer, date: try Self.moment(text, on: c, in: timeZone))
         }
-        return DayTimes(day: String(format: "%04d-%02d-%02d", c.year!, c.month!, c.day!), times: times)
+        let h = decoded.data.date.hijri
+        let hijri = Int(h.day).flatMap { day in
+            Int(h.year).map { HijriDate(day: day, month: h.month.number, year: $0) }
+        }
+        return DayTimes(day: String(format: "%04d-%02d-%02d", c.year!, c.month!, c.day!), times: times, hijri: hijri)
     }
 
     /// Turns "05:13" or "05:13 (CST)" on a given day into an exact moment.
@@ -66,7 +70,17 @@ nonisolated struct AladhanSource: PrayerTimesSource {
         let data: DayData
         struct DayData: Decodable {
             let timings: Timings
+            let date: DateInfo
             let meta: Meta
+        }
+        struct DateInfo: Decodable {
+            let hijri: Hijri
+        }
+        struct Hijri: Decodable {
+            let day: String
+            let month: Month
+            let year: String
+            struct Month: Decodable { let number: Int }
         }
         struct Timings: Decodable {
             let Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha: String

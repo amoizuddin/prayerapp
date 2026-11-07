@@ -27,6 +27,29 @@ nonisolated struct DayTimes: Codable, Hashable, Sendable {
     /// The day these times belong to, as "yyyy-MM-dd" in the location's time zone.
     let day: String
     let times: [PrayerTime]
+    /// The Hijri date for this day (the one that begins at the previous evening's Maghrib).
+    /// Optional so copies saved before this field existed still load.
+    var hijri: HijriDate?
+}
+
+/// A date in the Islamic (Hijri) calendar.
+nonisolated struct HijriDate: Codable, Hashable, Sendable {
+    let day: Int
+    let month: Int   // 1 = Muharram … 12 = Dhu al-Hijjah
+    let year: Int
+
+    private static let monthNames = [
+        "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani",
+        "Jumada al-Ula", "Jumada al-Akhirah", "Rajab", "Shaban",
+        "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah",
+    ]
+
+    var monthName: String {
+        (1...12).contains(month) ? Self.monthNames[month - 1] : ""
+    }
+
+    /// For example "27 Jumada al-Ula 1448".
+    var formatted: String { "\(day) \(monthName) \(year)" }
 }
 
 /// Anything that can supply prayer times. Aladhan today; IF's iqamah times later.

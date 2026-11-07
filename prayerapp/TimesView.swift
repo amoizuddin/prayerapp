@@ -30,6 +30,11 @@ struct TimesView: View {
                 if let next {
                     Section {
                         CountdownRow(next: next, now: now)
+                    } header: {
+                        // The Hijri date; switches to the next day at Maghrib.
+                        if let hijri = store.hijriDate(at: now) {
+                            Text(hijri.formatted)
+                        }
                     }
                 }
                 Section("Today") {
