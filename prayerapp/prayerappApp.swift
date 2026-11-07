@@ -9,6 +9,10 @@ import SwiftUI
 
 @main
 struct prayerappApp: App {
+    init() {
+        PrayerAlertScheduler.shared.activate()
+    }
+
     var body: some Scene {
         WindowGroup {
             TimesView()

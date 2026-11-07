@@ -27,15 +27,37 @@ struct TimesView: View {
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Settings", systemImage: "gearshape") { showingSettings = true }
+                        }
                     }
             }
         }
-        .task { await store.refreshIfNeeded(now: AppClock.now) }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView { rescheduleAlerts() }
+        }
+        .task {
+            await PrayerAlertScheduler.shared.requestPermission()
+            await store.refreshIfNeeded(now: AppClock.now)
+            rescheduleAlerts()
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                Task { await store.refreshIfNeeded(now: AppClock.now) }
+                Task {
+                    await store.refreshIfNeeded(now: AppClock.now)
+                    rescheduleAlerts()
+                }
             }
         }
+        .onChange(of: store.days) { rescheduleAlerts() }
+    }
+
+    @State private var showingSettings = false
+
+    /// Re-lines up the next week of prayer alerts from the current times and settings.
+    private func rescheduleAlerts() {
+        let days = store.days
+        Task { await PrayerAlertScheduler.shared.reschedule(days: days, now: AppClock.now) }
     }
 
     /// Mail-style status: when the times were last updated, or that updating failed.
