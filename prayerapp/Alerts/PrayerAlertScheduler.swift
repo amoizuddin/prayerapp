@@ -58,7 +58,7 @@ final class PrayerAlertScheduler: NSObject, UNUserNotificationCenterDelegate {
         if let last = upcoming.last {
             let content = UNMutableNotificationContent()
             content.title = "Don't miss a prayer"
-            content.body = "Open Prayer Times to keep getting alerts."
+            content.body = "Open Salah to keep getting alerts."
             content.sound = .default
             await add(id: "running-low", content: content, at: last.date.addingTimeInterval(-24 * 60 * 60), now: now)
         }

@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Now
-- Nothing in progress.
+- **Lock Screen widget** (paused): next prayer and time, plus time remaining in hours and minutes (rectangular), or "Asr 2:18 PM" (inline). Waiting on adding a Widget Extension target named `PrayerWidget` in Xcode (File → New → Target → iOS → Widget Extension, all three "Include" boxes unchecked).
 
 ## Next
 - **Azan and widget:** the azan as the notification sound (under 30 seconds, bundled as `.caf`), and a Lock Screen widget for the next prayer.
@@ -15,7 +15,6 @@
 - **Hijri date adjustment:** shift the Hijri date by ±1 day to match IF's moon-sighting date.
 - **Home Screen widget:** a bigger widget that could show all of today's times, alongside the Lock Screen widget.
 - **Salah tracker:** a simple daily checklist of the five prayers to tick off as each is prayed. Details to be fleshed out; could tie in with "Mark as prayed" above (the alert's "Prayed" button checking it off).
-- **App name:** rename the app from "prayerapp" to "Prayer Times" so the home screen and permission prompt match the reminder text.
 
 ## Done
 - **Times screen:** today's five prayers plus Sunrise, the next one highlighted, and a live countdown. Times cached for offline use.
@@ -23,5 +22,6 @@
 - **Pull-to-refresh:** spins while held, fetches when let go, with a status line ("Updated just now" / "Couldn't connect · Updated 2 hours ago").
 - **Prayer alerts:** a local alert at each of the five prayers (not Sunrise), 12 days ahead (iOS caps queued alerts at 64), refilled whenever the app opens, wakes, or refreshes.
   - Each prayer can be set to Time Sensitive (breaks through Focus modes) in Settings (gear button).
-  - A "running low" reminder about a day before alerts run out: "Don't miss a prayer" / "Open Prayer Times to keep getting alerts."
+  - A "running low" reminder about a day before alerts run out: "Don't miss a prayer" / "Open Salah to keep getting alerts."
 - **Background refresh and month-at-a-time data:** about 30 days of times per fetch (Aladhan's month endpoint); the app goes online only when fewer than 13 days remain (about every 2½ weeks). iOS is asked to wake the app every 3 days to refill alerts from saved times. Best effort: iOS may delay or skip it (Low Power Mode, Background App Refresh off, app swiped away), which the 12 days of alerts cover.
+- **App name:** shown as "Salah" on the Home Screen and in iOS prompts.
