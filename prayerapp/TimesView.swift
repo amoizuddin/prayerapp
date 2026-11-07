@@ -53,6 +53,8 @@ struct TimesView: View {
     }
 
     @State private var showingSettings = false
+    /// Knows whether a finger is on the list (used to refresh only once it's let go).
+    @State private var scrollTracker = ScrollTracker()
 
     /// Re-lines up the next week of prayer alerts from the current times and settings.
     private func rescheduleAlerts() {
@@ -81,6 +83,7 @@ struct TimesView: View {
                 if let next {
                     Section {
                         CountdownRow(next: next, now: now)
+                            .background(ScrollViewFinder(tracker: scrollTracker))
                     }
                 }
                 Section {
@@ -94,6 +97,12 @@ struct TimesView: View {
                 }
             }
             .refreshable {
+                // Spin while the finger is still down; fetch once it's let go
+                // (with a 15-second safety limit so the spinner can never get stuck).
+                let pulled = Date()
+                while scrollTracker.isTouching && Date().timeIntervalSince(pulled) < 15 {
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
                 // Keep the spinner up for at least a second, so a fast refresh still reads as one.
                 let started = Date()
                 await store.refresh(now: AppClock.now)
